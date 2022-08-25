@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs"); // Load the File System to execute our common tasks (CRUD)
-const dfd = require("danfojs-node");
+const Papa = require("papaparse");
 
 let data;
 const data2 = [];
@@ -102,39 +102,50 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on("show-open-dialog", (event, arg) => {
-    const options = {
-      //title: 'Open a file or folder',
-      //defaultPath: '/path/to/something/',
-      //buttonLabel: 'Do it',
-      /*filters: [
-        { name: 'xml', extensions: ['xml'] }
-      ],*/
-      //properties: ['showHiddenFiles'],
-      //message: 'This message will only be shown on macOS'
-    };
     dialog
       .showOpenDialog(null, {
         properties: ["openFile"],
       })
       .then((result) => {
         const file = result.filePaths[0];
+        const csvFile = fs.readFileSync(file);
+        const csvData = csvFile.toString();
         console.time("csv read");
-        dfd
-          .readCSV(file) //assumes file is in CWD
-          .then((df) => {
-            data = df;
-            console.timeEnd("csv read");
-            event.sender.send("open-dialog-paths-selected", data);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+        Papa.parse(csvData, {
+          header: true,
+          skipEmptyLines: false,
+          complete: (results) => {
+            const result = convert(results.data);
+            event.sender.send("open-dialog-paths-selected", result);
+          },
+        });
+
+        // dfd
+        //   .readCSV(file) //assumes file is in CWD
+        //   .then((df) => {
+        //     data = df;
+        //     console.timeEnd("csv read");
+        //     event.sender.send("open-dialog-paths-selected", data);
+        //   })
+        //   .catch((err) => {
+        //     console.log(err);
+        //   });
       })
       .catch((err) => {
         console.log(err);
       });
   });
 
+  ipcMain.on("handle-duplicate", (event, rowData) => {
+    const rowDataNoDup = removeDup(rowData).values();
+    event.sender.send("on-handle-duplicate", [...rowDataNoDup]);
+  });
+  ipcMain.on("handle-save", (event, name) => {
+    event.sender.send("on-handle-save", name);
+  });
+  ipcMain.on("handle-search", (event, flag) => {
+    event.sender.send("on-handle-search", flag);
+  });
   // onInputValue 이벤트 수신
   ipcMain.on("onInputValue", (evt, payload) => {
     console.log("on ipcMain event:: ", payload);
@@ -149,3 +160,19 @@ app.whenReady().then(() => {
 app.on("window-all-closed", function () {
   if (process.platform !== "darwin") app.quit();
 });
+
+function removeDup(rowData) {
+  const newRowData = new Map();
+  for (let row of rowData) {
+    newRowData.set(JSON.stringify(row), row);
+  }
+  return newRowData;
+}
+
+const convert = (results) => {
+  const rowsArray = Object.keys(results[0]);
+  return {
+    columns: rowsArray.map((row) => ({ field: row, sortable: true })),
+    data: results,
+  };
+};
