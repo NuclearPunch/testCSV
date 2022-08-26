@@ -4,12 +4,13 @@ const savedData = {};
 let order = 0;
 
 ipcRenderer.on("open-dialog-paths-selected", (evt, args) => {
-  const { columns, data } = args || {};
-  gridOptions.api.setRowData([...data]);
-  gridOptions.api.setColumnDefs([...columns]);
+  const { $columns, $data } = args || {};
+  gridOptions.api.setRowData([...$data]);
+  gridOptions.api.setColumnDefs([...$columns]);
 });
 
 ipcRenderer.on("on-handle-duplicate", (evt, rowData) => {
+  console.log(rowData);
   gridOptions.api.setRowData([...rowData]);
 });
 
@@ -32,11 +33,20 @@ ipcRenderer.on("on-handle-save", (evt, name) => {
   box.replaceChildren(child);
 });
 
-// util func
 ipcRenderer.on("on-handle-search", (evt, flag) => {
   const searchText = document.getElementById("search").value;
   findString(searchText, flag);
 });
+
+ipcRenderer.on("on-handle-change-val", (evt, rowData) => {
+  gridOptions.api.setRowData(rowData);
+});
+ipcRenderer.on("on-pivot", (evt, arg) => {
+  const [pivoted, org] = arg;
+  console.log(pivoted, org);
+});
+
+// util func
 
 // search
 const getCell = (text) => {

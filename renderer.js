@@ -3,6 +3,10 @@ window.onload = () => {
   const dupBtn = document.getElementById("dup-btn");
   const saveBtn = document.getElementById("save-btn");
   const searchBtn = document.getElementById("search-btn");
+  const changeValueBtn = document.getElementById("change-val-btn");
+  const oldInput = document.getElementById("change-old");
+  const newInput = document.getElementById("change-new");
+  const btn = document.getElementById("b");
 
   uploadBtn.addEventListener("click", (evt) => {
     ipcRenderer.send("show-open-dialog");
@@ -36,5 +40,18 @@ window.onload = () => {
     searchInput.oninput = (e) => ipcRenderer.send("handle-search", 0);
     searchAdd.onclick = () => ipcRenderer.send("handle-search", -1);
     searchMin.onclick = () => ipcRenderer.send("handle-search", 1);
+  });
+  changeValueBtn.addEventListener("click", () => {
+    const rowData = [];
+    gridOptions.api.forEachNode((node) => rowData.push(node.data));
+    ipcRenderer.send("handle-change-val", [
+      rowData,
+      gridOptions.api.getColumnDefs(),
+      oldInput.value,
+      newInput.value,
+    ]);
+  });
+  btn.addEventListener("click", () => {
+    ipcRenderer.send("pivot");
   });
 };

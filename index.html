@@ -23,6 +23,13 @@
         <button id="search-btn-add" style="cursor: pointer"><</button>
         <button id="search-btn-min" style="cursor: pointer">></button>
       </div>
+      <div>
+        <input id="change-old" />
+          to
+        <input id="change-new" />
+        <button id="change-val-btn">값 바꾸기</button>
+      </div>
+      <button id="b">피봇</button>
     </div>
     <div style="display: flex; ">
       <div
@@ -38,6 +45,7 @@
       let gridOptions = {}
       const gridDiv = document.querySelector("#myGrid");
       new agGrid.Grid(gridDiv, gridOptions);
+
     </script>
   </body>
 </html>
