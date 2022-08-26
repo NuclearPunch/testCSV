@@ -4,9 +4,9 @@ const savedData = {};
 let order = 0;
 
 ipcRenderer.on("open-dialog-paths-selected", (evt, args) => {
-  const { $columns, $data } = args || {};
-  gridOptions.api.setRowData([...$data]);
-  gridOptions.api.setColumnDefs([...$columns]);
+  const { columns, data } = args || {};
+  gridOptions.api.setRowData([...data]);
+  gridOptions.api.setColumnDefs([...columns]);
 });
 
 ipcRenderer.on("on-handle-duplicate", (evt, rowData) => {

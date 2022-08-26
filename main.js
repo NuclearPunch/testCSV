@@ -106,49 +106,38 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on("show-open-dialog", (event, arg) => {
-    let data = [
-      ["Apple", 89, 78],
-      ["Pear", 2, 3],
-      ["Pear", 5, 6],
-      ["Apple", 30, 40],
-    ];
-    let cols = ["A", "B", "C"];
-
-    let df = new dfd.DataFrame(data, { columns: cols });
-    let group_df = df.groupby(["A"]).colDict;
-    console.log(group_df);
     dialog
       .showOpenDialog(null, {
         properties: ["openFile"],
       })
       .then((result) => {
         const file = result.filePaths[0];
-        // const csvFile = fs.readFileSync(file);
-        // const csvData = csvFile.toString();
-        // console.time("csv read");
-        // Papa.parse(csvData, {
-        //   header: true,
-        //   skipEmptyLines: false,
-        //   complete: (results) => {
-        //     const result = convert(results.data);
-        //     event.sender.send("open-dialog-paths-selected", result);
-        //   },
-        // });
-        dfd
-          .readCSV(file) //assumes file is in CWD
-          .then((df) => {
-            allData = df;
-            allCols = df.$columns;
-            dataFrame = df.$data;
-            console.timeEnd("csv read");
-            event.sender.send("open-dialog-paths-selected", {
-              $columns: convertToColumn(df.$columns),
-              $data: convertToData(df.$data, convertToColumn(df.$columns)),
-            });
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+        const csvFile = fs.readFileSync(file);
+        const csvData = csvFile.toString();
+        console.time("csv read");
+        Papa.parse(csvData, {
+          header: true,
+          skipEmptyLines: false,
+          complete: (results) => {
+            const result = convert(results.data);
+            event.sender.send("open-dialog-paths-selected", result);
+          },
+        });
+        // dfd
+        //   .readCSV(file) //assumes file is in CWD
+        //   .then((df) => {
+        //     allData = df;
+        //     allCols = df.$columns;
+        //     dataFrame = df.$data;
+        //     console.timeEnd("csv read");
+        //     event.sender.send("open-dialog-paths-selected", {
+        //       $columns: convertToColumn(df.$columns),
+        //       $data: convertToData(df.$data, convertToColumn(df.$columns)),
+        //     });
+        //   })
+        //   .catch((err) => {
+        //     console.log(err);
+        //   });
       })
       .catch((err) => {
         console.log(err);
