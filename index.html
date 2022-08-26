@@ -10,12 +10,42 @@
     <script src="./renderer.js"></script>
 
     <div>
-      <button id="btn" style="cursor: pointer">파일 열기</button>
+      <button id="upload-btn" style="cursor: pointer">파일 열기</button>
+      <button id="dup-btn" style="cursor: pointer">중복행 제거</button>
+      <input id="save">
+
+      <button id="save-btn" style="cursor: pointer">다른 이름으로 저장</button>
+      <input id="search" style="display: none">
+      <button id="search-btn">검색</button>
+      <button id="search-cancel-btn" style="display: none">취소</button>
+      <div id="search-details" style="display: none">
+        <span>1/10</span>
+        <button id="search-btn-add" style="cursor: pointer"><</button>
+        <button id="search-btn-min" style="cursor: pointer">></button>
+      </div>
+      <div>
+        <input id="change-old" />
+          to
+        <input id="change-new" />
+        <button id="change-val-btn">값 바꾸기</button>
+      </div>
+      <button id="b">피봇</button>
     </div>
-    <div
-      id="myGrid"
-      style="height: 600px; width: 90%; margin: 30px"
-      class="ag-theme-alpine"
-    ></div>
+    <div style="display: flex; ">
+      <div
+        id="myGrid"
+        style="height: 600px; width: 90%; margin: 30px"
+        class="ag-theme-alpine"
+      >
+      </div>
+      <div style="width: 200px;height: 580px; padding: 10px; background: white; margin: 30px 30px 30px 0" id="info">
+      </div>
+    </div>
+    <script>
+      let gridOptions = {}
+      const gridDiv = document.querySelector("#myGrid");
+      new agGrid.Grid(gridDiv, gridOptions);
+
+    </script>
   </body>
 </html>

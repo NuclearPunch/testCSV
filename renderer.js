@@ -1,41 +1,57 @@
-const { ipcRenderer } = require("electron");
-
 window.onload = () => {
-  const btnEl = document.getElementById("btn");
+  const uploadBtn = document.getElementById("upload-btn");
+  const dupBtn = document.getElementById("dup-btn");
+  const saveBtn = document.getElementById("save-btn");
+  const searchBtn = document.getElementById("search-btn");
+  const changeValueBtn = document.getElementById("change-val-btn");
+  const oldInput = document.getElementById("change-old");
+  const newInput = document.getElementById("change-new");
+  const btn = document.getElementById("b");
 
-  btnEl.addEventListener("click", (evt) => {
-    // onInputValue 이벤트 송신
+  uploadBtn.addEventListener("click", (evt) => {
     ipcRenderer.send("show-open-dialog");
   });
+  dupBtn.addEventListener("click", (evt) => {
+    const rowData = [];
+    gridOptions.api.forEachNode((node) => rowData.push(node.data));
+    ipcRenderer.send("handle-duplicate", [...rowData]);
+  });
+  saveBtn.addEventListener("click", (evt) => {
+    const name = document.getElementById("save").value;
+    ipcRenderer.send("handle-save", name);
+  });
+  searchBtn.addEventListener("click", (evt) => {
+    const searchDetails = document.getElementById("search-details");
+    const cancelBtn = document.getElementById("search-cancel-btn");
+    const searchBtn = document.getElementById("search-btn");
+    const searchInput = document.getElementById("search");
+    const searchAdd = document.getElementById("search-btn-add");
+    const searchMin = document.getElementById("search-btn-min");
 
-  // replyInputValue에 대한 응답 수신
-  ipcRenderer.on("open-dialog-paths-selected", (evt, payload) => {
-    const columnDefs = Object.keys(payload.$columns).map((field) => ({
-      field,
-      sortable: true,
-    }));
-
-    // let the grid know which columns and what data to use
-    const gridOptions = {
-      columnDefs,
-      rowData: payload.$data,
+    cancelBtn.style.display = "inline-block";
+    searchBtn.style.display = "none";
+    searchDetails.style.display = "inline-block";
+    searchInput.style.display = "inline-block";
+    cancelBtn.onclick = () => {
+      searchBtn.style.display = "inline-block";
+      cancelBtn.style.display = "none";
+      searchInput.style.display = "none";
     };
-
-    //      const columnDefs = Object.keys(payload.$columns).map((key) => ({
-    //   field: key,
-    //   sortable: true,
-    // }));
-
-    // // let the grid know which columns and what data to use
-    // const gridOptions = {
-    //   columnDefs,
-    //   rowData: payload.$data,
-    // };
-    const gridDiv = document.querySelector("#myGrid");
-    new agGrid.Grid(gridDiv, gridOptions);
-
-    // setup the grid after the page has finished loading
-
-    // document.getElementById("text-box").textContent = payload;
+    searchInput.oninput = (e) => ipcRenderer.send("handle-search", 0);
+    searchAdd.onclick = () => ipcRenderer.send("handle-search", -1);
+    searchMin.onclick = () => ipcRenderer.send("handle-search", 1);
+  });
+  changeValueBtn.addEventListener("click", () => {
+    const rowData = [];
+    gridOptions.api.forEachNode((node) => rowData.push(node.data));
+    ipcRenderer.send("handle-change-val", [
+      rowData,
+      gridOptions.api.getColumnDefs(),
+      oldInput.value,
+      newInput.value,
+    ]);
+  });
+  btn.addEventListener("click", () => {
+    ipcRenderer.send("pivot");
   });
 };

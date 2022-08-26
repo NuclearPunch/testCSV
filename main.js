@@ -2,10 +2,12 @@ const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs"); // Load the File System to execute our common tasks (CRUD)
 const dfd = require("danfojs-node");
+const Papa = require("papaparse");
 
-let data;
+let allData = {};
+let allCols;
 const data2 = [];
-
+let dataFrame = [];
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1281,
@@ -96,35 +98,53 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-
   app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+  app.on("window-all-closed", function () {
+    if (process.platform !== "darwin") app.quit();
+  });
 
   ipcMain.on("show-open-dialog", (event, arg) => {
-    const options = {
-      //title: 'Open a file or folder',
-      //defaultPath: '/path/to/something/',
-      //buttonLabel: 'Do it',
-      /*filters: [
-        { name: 'xml', extensions: ['xml'] }
-      ],*/
-      //properties: ['showHiddenFiles'],
-      //message: 'This message will only be shown on macOS'
-    };
+    let data = [
+      ["Apple", 89, 78],
+      ["Pear", 2, 3],
+      ["Pear", 5, 6],
+      ["Apple", 30, 40],
+    ];
+    let cols = ["A", "B", "C"];
+
+    let df = new dfd.DataFrame(data, { columns: cols });
+    let group_df = df.groupby(["A"]).colDict;
+    console.log(group_df);
     dialog
       .showOpenDialog(null, {
         properties: ["openFile"],
       })
       .then((result) => {
         const file = result.filePaths[0];
-        console.time("csv read");
+        // const csvFile = fs.readFileSync(file);
+        // const csvData = csvFile.toString();
+        // console.time("csv read");
+        // Papa.parse(csvData, {
+        //   header: true,
+        //   skipEmptyLines: false,
+        //   complete: (results) => {
+        //     const result = convert(results.data);
+        //     event.sender.send("open-dialog-paths-selected", result);
+        //   },
+        // });
         dfd
           .readCSV(file) //assumes file is in CWD
           .then((df) => {
-            data = df;
+            allData = df;
+            allCols = df.$columns;
+            dataFrame = df.$data;
             console.timeEnd("csv read");
-            event.sender.send("open-dialog-paths-selected", data);
+            event.sender.send("open-dialog-paths-selected", {
+              $columns: convertToColumn(df.$columns),
+              $data: convertToData(df.$data, convertToColumn(df.$columns)),
+            });
           })
           .catch((err) => {
             console.log(err);
@@ -135,17 +155,66 @@ app.whenReady().then(() => {
       });
   });
 
-  // onInputValue 이벤트 수신
-  ipcMain.on("onInputValue", (evt, payload) => {
-    console.log("on ipcMain event:: ", payload);
-
-    const computedPayload = payload + "(computed)";
-
-    // replyInputValue 송신 또는 응답
-    evt.reply("replyInputValue", data || data2);
+  ipcMain.on("handle-duplicate", (event, rowData) => {
+    const rowDataNoDup = [...removeDup(rowData).values()];
+    // const dataFrame = new dfd.DataFrame(rowDataNoDup);
+    // dataFrame.$data.toJSON();
+    event.sender.send("on-handle-duplicate", rowDataNoDup);
+  });
+  ipcMain.on("handle-save", (event, name) =>
+    event.sender.send("on-handle-save", name)
+  );
+  ipcMain.on("handle-search", (event, flag) =>
+    event.sender.send("on-handle-search", flag)
+  );
+  ipcMain.on("handle-change-val", (evt, payload) => {
+    const [rowData, columns, oldVal, newVal] = payload;
+    // const result = allData.replace(oldVal, newVal);
+    // evt.sender.send("on-handle-change-val", [
+    //   ...convertToData(result.$data, convertToColumn(result.$columns)),
+    // ]);
+    const resuklt = rowData.map((data) => {
+      const old = Object.values(data).find((val) => val === oldVal);
+      const key = Object.keys(data).find((item) => data[item] === oldVal);
+      return {
+        ...data,
+        [key]: old ? newVal : oldVal,
+      };
+    });
+    evt.sender.send("on-handle-change-val", [...resuklt]);
+  });
+  ipcMain.on("pivot", (evt, arg) => {
+    const de = allData.groupby(["Attributed_touch_type"]);
+    evt.sender.send("on-pivot", [de.data, allData.$data]);
   });
 });
 
-app.on("window-all-closed", function () {
-  if (process.platform !== "darwin") app.quit();
-});
+function removeDup(rowData) {
+  const newRowData = new Map();
+  for (let row of rowData) {
+    newRowData.set(JSON.stringify(row), row);
+  }
+  return newRowData;
+}
+
+const convert = (results) => {
+  const rowsArray = Object.keys(results[0]);
+  return {
+    columns: rowsArray.map((row) => ({ field: row, sortable: true })),
+    data: results,
+  };
+};
+
+const convertToColumn = (cols) =>
+  cols.map((col) => ({ field: col, sortable: true }));
+
+const convertToData = (data, cols) => [
+  ...data.map((item) =>
+    cols.reduce((acc, col, idx) => {
+      acc[col.field] = item[idx];
+      return acc;
+    }, {})
+  ),
+];
+
+const convertToDataFrame = (rowData) => new dfd.DataFrame([...rowData]);
