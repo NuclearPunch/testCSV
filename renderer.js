@@ -1,12 +1,18 @@
 window.onload = () => {
-  const uploadBtn = document.getElementById("upload-btn");
-  const dupBtn = document.getElementById("dup-btn");
-  const saveBtn = document.getElementById("save-btn");
-  const searchBtn = document.getElementById("search-btn");
-  const changeValueBtn = document.getElementById("change-val-btn");
-  const oldInput = document.getElementById("change-old");
-  const newInput = document.getElementById("change-new");
-  const btn = document.getElementById("b");
+  const uploadBtn = getEle("upload-btn");
+  const dupBtn = getEle("dup-btn");
+  const saveBtn = getEle("save-btn");
+  const searchBtn = getEle("search-btn");
+  const changeValueBtn = getEle("change-val-btn");
+  const oldInput = getEle("change-old");
+  const newInput = getEle("change-new");
+  const calcBtn = getEle("calc-btn");
+  const calcSelect = getEle("calc-select");
+  const calc1 = getEle("calc-1");
+  const calc2 = getEle("calc-2");
+  const calc3 = getEle("calc-3");
+  const cancelCalBtn = getEle("cancel-cal-btn");
+  const mergeBtn = getEle("merge-btn");
 
   uploadBtn.addEventListener("click", (evt) => {
     ipcRenderer.send("show-open-dialog");
@@ -21,12 +27,12 @@ window.onload = () => {
     ipcRenderer.send("handle-save", name);
   });
   searchBtn.addEventListener("click", (evt) => {
-    const searchDetails = document.getElementById("search-details");
-    const cancelBtn = document.getElementById("search-cancel-btn");
-    const searchBtn = document.getElementById("search-btn");
-    const searchInput = document.getElementById("search");
-    const searchAdd = document.getElementById("search-btn-add");
-    const searchMin = document.getElementById("search-btn-min");
+    const searchDetails = getEle("search-details");
+    const cancelBtn = getEle("search-cancel-btn");
+    const searchBtn = getEle("search-btn");
+    const searchInput = getEle("search");
+    const searchAdd = getEle("search-btn-add");
+    const searchMin = getEle("search-btn-min");
 
     cancelBtn.style.display = "inline-block";
     searchBtn.style.display = "none";
@@ -51,7 +57,30 @@ window.onload = () => {
       newInput.value,
     ]);
   });
-  btn.addEventListener("click", () => {
-    ipcRenderer.send("pivot");
+  calcBtn.addEventListener("click", () => {
+    const rowData = [];
+    gridOptions.api.forEachNode((node) => rowData.push(node.data));
+    ipcRenderer.send("handle-calc", [
+      calc1.value,
+      calc2.value,
+      calc3.value,
+      calcSelect.value,
+      rowData,
+    ]);
+  });
+  cancelCalBtn.addEventListener("click", () => {
+    const headers = document.querySelectorAll(".ag-header-cell");
+    headers.forEach((header) => {
+      header.style.backgroundColor = "white";
+    });
+    selectedRows.length = 0;
+    cancelCalBtn.style.display = "none";
+    calc1.value = "";
+    calc2.value = "";
+  });
+  mergeBtn.addEventListener("click", () => {
+    const rowData = [];
+    gridOptions.api.forEachNode((node) => rowData.push(node.data));
+    ipcRenderer.send("handle-merge", [rowData, selectedRows]);
   });
 };

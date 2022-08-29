@@ -1,28 +1,36 @@
 const { ipcRenderer } = require("electron");
-
+const getEle = (id) => document.getElementById(id);
 const savedData = {};
 let order = 0;
-
+let selectedRows = [];
+let eventHandler = [];
 ipcRenderer.on("open-dialog-paths-selected", (evt, args) => {
   const { columns, data } = args || {};
+
   gridOptions.api.setRowData([...data]);
   gridOptions.api.setColumnDefs([...columns]);
+  gridOptions.api.addEventListener("virtualColumnsChanged", handleShiftClick);
+
+  const headers = document.querySelectorAll(".ag-header-cell");
+
+  headers.forEach((header) => {
+    header.addEventListener("click", handleClick);
+  });
 });
 
 ipcRenderer.on("on-handle-duplicate", (evt, rowData) => {
-  console.log(rowData);
   gridOptions.api.setRowData([...rowData]);
 });
 
 ipcRenderer.on("on-handle-save", (evt, name) => {
   const rowData = [];
-  const box = document.getElementById("info");
-  const child = document.createElement("div");
+  const box = getEle("info");
+  const child = getEle("div");
 
   gridOptions.api.forEachNode((node) => rowData.push(node.data));
   Object.assign(savedData, { [name]: rowData });
   Object.keys(savedData).forEach((key) => {
-    const div = document.createElement("div");
+    const div = getEle("div");
     const textNode = document.createTextNode(key);
     div.appendChild(textNode);
     div.onclick = function () {
@@ -34,16 +42,24 @@ ipcRenderer.on("on-handle-save", (evt, name) => {
 });
 
 ipcRenderer.on("on-handle-search", (evt, flag) => {
-  const searchText = document.getElementById("search").value;
+  const searchText = getEle("search").value;
   findString(searchText, flag);
 });
 
 ipcRenderer.on("on-handle-change-val", (evt, rowData) => {
   gridOptions.api.setRowData(rowData);
 });
-ipcRenderer.on("on-pivot", (evt, arg) => {
-  const [pivoted, org] = arg;
-  console.log(pivoted, org);
+ipcRenderer.on("on-handle-calc", (evt, args) => {
+  const [rowData, colName] = args;
+  const columns = gridOptions.api.getColumnDefs();
+  gridOptions.api.setRowData([...rowData]);
+  gridOptions.api.setColumnDefs([...columns, { field: colName }]);
+});
+ipcRenderer.on("on-handle-merge", (evt, args) => {
+  const [newRowData, newColNames] = args;
+  const columns = gridOptions.api.getColumnDefs();
+  gridOptions.api.setRowData([...newRowData]);
+  gridOptions.api.setColumnDefs([...columns, { field: newColNames }]);
 });
 
 // util func
@@ -65,4 +81,11 @@ const paint = (search, order) => {
     ele[order].style.background = "red";
     ele[order].scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
+};
+
+const handleShiftClick = () => {
+  const headers = document.querySelectorAll(".ag-header-cell");
+  headers.forEach((header) => {
+    header.addEventListener("click", handleClick);
+  });
 };

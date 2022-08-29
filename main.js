@@ -172,9 +172,30 @@ app.whenReady().then(() => {
     });
     evt.sender.send("on-handle-change-val", [...resuklt]);
   });
-  ipcMain.on("pivot", (evt, arg) => {
-    const de = allData.groupby(["Attributed_touch_type"]);
-    evt.sender.send("on-pivot", [de.data, allData.$data]);
+  ipcMain.on("handle-calc", (evt, args) => {
+    const [col1, col2, col3, sign, rowData] = args;
+    const result = rowData.map((data) => ({
+      ...data,
+      [col3]: calculate(
+        sign,
+        data[col1.toLowerCase()],
+        data[col2.toLowerCase()]
+      ),
+    }));
+    evt.sender.send("on-handle-calc", [result, col3]);
+  });
+  ipcMain.on("handle-merge", (evt, args) => {
+    const [rowData, selectedRows] = args;
+    const newColNames = selectedRows[0] + selectedRows[1];
+    const newRowData = rowData.map((row) => {
+      return {
+        ...row,
+        [newColNames]:
+          row[selectedRows[0].toLowerCase()] +
+          row[selectedRows[1].toLowerCase()],
+      };
+    });
+    evt.sender.send("on-handle-merge", [newRowData, newColNames]);
   });
 });
 
@@ -207,3 +228,16 @@ const convertToData = (data, cols) => [
 ];
 
 const convertToDataFrame = (rowData) => new dfd.DataFrame([...rowData]);
+
+const calculate = (sign, val1, val2) => {
+  const [v1, v2] = [Number(val1), Number(val2)];
+  if (sign === "+") {
+    return v1 + v2;
+  } else if (sign === "-") {
+    return v1 - v2;
+  } else if (sign === "*") {
+    return v1 * v2;
+  } else if (sign === "/") {
+    return v1 / v2;
+  }
+};

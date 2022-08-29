@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>Hello World!</title>
     <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    <script src="https://unpkg.com/ag-grid-enterprise/dist/ag-grid-enterprise.js"></script>
     <script src="aggrid.js"></script>
   </head>
   <body>
@@ -25,11 +26,25 @@
       </div>
       <div>
         <input id="change-old" />
-          to
+        <span style="color: white">to</span>
         <input id="change-new" />
         <button id="change-val-btn">값 바꾸기</button>
       </div>
-      <button id="b">피봇</button>
+      <div>
+        <input id="calc-1" readonly>
+        <select name="calc" id="calc-select">
+          <option value="+"> + </option>
+          <option value="-"> - </option>
+          <option value="/"> / </option>
+          <option value="*"> * </option>
+        </select>
+        <input  id="calc-2" readonly>
+        <span style="color: white">=</span>
+        <input  id="calc-3">
+        <button id="calc-btn">계산된 컬럼 추가</button>
+        <button id="cancel-cal-btn" style="display: none">취소</button>
+        <button id="merge-btn">컬럼 합치기</button>
+      </div>
     </div>
     <div style="display: flex; ">
       <div
@@ -45,6 +60,34 @@
       let gridOptions = {}
       const gridDiv = document.querySelector("#myGrid");
       new agGrid.Grid(gridDiv, gridOptions);
+
+      const handleClick = (e) => {
+        const [input1, input2] = [getEle("calc-1"), getEle("calc-2")];
+        const cancelCalBtn = getEle("cancel-cal-btn");
+        const color = e.target.style.backgroundColor;
+        const headers = [...document.querySelectorAll(".ag-header-cell")];
+
+        if (selectedRows.length < 2) {
+          const selectedText = e.currentTarget.querySelector('.ag-header-cell-text').innerText;
+          if (e.shiftKey) {
+            if (selectedRows.includes(selectedText)) {
+              selectedRows.pop();
+              input1.value = "";
+            } else {
+              selectedRows.push(selectedText);
+              input1.value = selectedRows[0] || "";
+              input2.value = selectedRows[1] || "";
+            }
+            const aa = headers.filter(header => header.querySelector('.ag-header-cell-text').innerText === selectedText)[0]
+            if(aa) {
+              aa.style.backgroundColor =  color === "skyblue" ? "white" : "skyblue";
+            }
+          }
+        }
+        if (selectedRows.length === 2) {
+          cancelCalBtn.style.display = "inline-block";
+        }
+      };
 
     </script>
   </body>
