@@ -10,83 +10,7 @@ ipcRenderer.on("open-dialog-paths-selected", (evt, args) => {
   const { columns, data } = args || {};
 
   gridOptions.api.setRowData([...data]);
-  gridOptions.api.setColumnDefs([
-    ...columns.map((row) => ({
-      field: row,
-      filter: "agMultiColumnFilter",
-      enableRowGroup: true,
-      enablePivot: true,
-      pivot: true,
-      defaultAggFunc: "sum",
-      enableValue: true,
-      filterParams: {
-        filters: [
-          {
-            filter: Filter,
-            // display: "subMenu",
-            filterParams: {
-              buttons: ["reset", "apply"],
-              debounceMs: 200,
-            },
-          },
-          {
-            filter: "agTextColumnFilter",
-            display: "accordion",
-            title: "조건으로 필터",
-            filterParams: {
-              filterOptions: ["contains", "blank", "notBlank"],
-              suppressAndOrCondition: true,
-              // buttons: ["reset", "apply"],
-              debounceMs: 200,
-            },
-          },
-          {
-            filter: "agNumberColumnFilter",
-            display: "accordion",
-            title: "값으로 필터",
-            filterParams: {
-              // filterOptions: ["contains", "blank", "notBlank"],
-              suppressAndOrCondition: true,
-              // buttons: ["reset", "apply"],
-              debounceMs: 200,
-            },
-          },
-          {
-            filter: "agDateColumnFilter",
-            display: "accordion",
-            title: "기간으로 필터",
-            filterParams: {
-              suppressAndOrCondition: true,
-              comparator: (filterLocalDateAtMidnight, cellValue) => {
-                const dateAsString = cellValue.split(" ")[0];
-                if (dateAsString == null) return -1;
-                const dateParts = dateAsString.split(".");
-                const cellDate = new Date(
-                  Number(dateParts[0]),
-                  Number(dateParts[1]) - 1,
-                  Number(dateParts[2])
-                );
-
-                if (
-                  filterLocalDateAtMidnight.getTime() === cellDate.getTime()
-                ) {
-                  return 0;
-                }
-
-                if (cellDate < filterLocalDateAtMidnight) {
-                  return -1;
-                }
-
-                if (cellDate > filterLocalDateAtMidnight) {
-                  return 1;
-                }
-              },
-            },
-          },
-        ],
-      },
-    })),
-  ]);
+  gridOptions.api.setColumnDefs([...getColDefs(columns)]);
   gridOptions.api.addEventListener("virtualColumnsChanged", handleShiftClick);
 
   const headers = document.querySelectorAll(".ag-header-cell");
@@ -137,7 +61,7 @@ ipcRenderer.on("on-handle-merge", (evt, args) => {
   const [newRowData, newColNames] = args;
   const columns = gridOptions.api.getColumnDefs();
   gridOptions.api.setRowData([...newRowData]);
-  gridOptions.api.setColumnDefs([...columns, { field: newColNames }]);
+  gridOptions.api.setColumnDefs([...columns, ...getColDefs([newColNames])]);
 });
 
 // util func
@@ -167,3 +91,85 @@ const handleShiftClick = () => {
     header.addEventListener("click", handleClick);
   });
 };
+
+const getColDefs = (columns) =>
+  columns.map((row) => ({
+    field: row,
+    filter: "agMultiColumnFilter",
+    enableRowGroup: true,
+    enablePivot: true,
+    pivot: true,
+    defaultAggFunc: "sum",
+    enableValue: true,
+    filterParams: {
+      filters: [
+        {
+          filter: Filter,
+          // display: "subMenu",
+          title: "기타 필터",
+          display: "accordion",
+          filterParams: {
+            buttons: ["reset", "apply"],
+            debounceMs: 200,
+          },
+        },
+        {
+          filter: "agTextColumnFilter",
+          display: "accordion",
+          title: "조건 필터",
+          filterParams: {
+            filterOptions: ["contains", "blank", "notBlank"],
+            suppressAndOrCondition: true,
+            // buttons: ["reset", "apply"],
+            debounceMs: 200,
+          },
+        },
+        {
+          filter: "agNumberColumnFilter",
+          display: "accordion",
+          title: "값 필터",
+          filterParams: {
+            // filterOptions: ["contains", "blank", "notBlank"],
+            suppressAndOrCondition: true,
+            // buttons: ["reset", "apply"],
+            debounceMs: 200,
+          },
+        },
+        {
+          filter: "agDateColumnFilter",
+          display: "accordion",
+          title: "기간 필터",
+          filterParams: {
+            suppressAndOrCondition: true,
+            comparator: (filterLocalDateAtMidnight, cellValue) => {
+              const dateAsString = cellValue.split(" ")[0];
+              if (dateAsString == null) return -1;
+              const dateParts = dateAsString.split(".");
+              const cellDate = new Date(
+                Number(dateParts[0]),
+                Number(dateParts[1]) - 1,
+                Number(dateParts[2])
+              );
+
+              if (filterLocalDateAtMidnight.getTime() === cellDate.getTime()) {
+                return 0;
+              }
+
+              if (cellDate < filterLocalDateAtMidnight) {
+                return -1;
+              }
+
+              if (cellDate > filterLocalDateAtMidnight) {
+                return 1;
+              }
+            },
+          },
+        },
+        {
+          filter: "agSetColumnFilter",
+          display: "accordion",
+          title: "값으로 필터",
+        },
+      ],
+    },
+  }));

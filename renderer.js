@@ -38,10 +38,14 @@ window.onload = () => {
     searchBtn.style.display = "none";
     searchDetails.style.display = "inline-block";
     searchInput.style.display = "inline-block";
+    searchAdd.style.display = "inline-block";
+    searchMin.style.display = "inline-block";
     cancelBtn.onclick = () => {
       searchBtn.style.display = "inline-block";
       cancelBtn.style.display = "none";
       searchInput.style.display = "none";
+      searchAdd.style.display = "none";
+      searchMin.style.display = "none";
     };
     searchInput.oninput = (e) => ipcRenderer.send("handle-search", 0);
     searchAdd.onclick = () => ipcRenderer.send("handle-search", -1);

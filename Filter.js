@@ -61,6 +61,9 @@ class Filter {
 
     // filter func
     const sort = (event, sort) => {
+      const ids = ["sort-desc", "sort-asc"];
+      const tobeExcluded = ids.filter((id) => id !== event.target.id);
+      document.getElementById(tobeExcluded).checked = false;
       gridOptions.columnApi.applyColumnState({
         state: [
           {
@@ -69,7 +72,6 @@ class Filter {
           },
         ],
       });
-      //todo 원본을 sort 해야함 !
       params.filterChangedCallback();
     };
     const modalOpen = (callback, innerHTML) => {
@@ -169,8 +171,7 @@ class Filter {
       const rowData = getRowData();
       gridOptions.api.setRowData([...removeDup(rowData)]);
     };
-    const filterCond = () => {};
-    const filterVal = () => {};
+    // const filterVal = () => {};
 
     // utils
     function removeDup(rowData) {
@@ -205,7 +206,7 @@ class Filter {
             <input id="col-name" />
           </div>
           <div style="position: absolute; bottom: 0; right: 0; padding: 4px;">
-            <button id="ok" onclick="cll()">확인</button>
+            <button id="ok">확인</button>
             <button onclick="modal.style.display = 'none'">취소</button>
           </div>
         </div>`
@@ -222,18 +223,15 @@ class Filter {
             <input id="new-val" />
           </div>
           <div style="position: absolute; bottom: 0; right: 0; padding: 4px;">
-            <button id="ok" onclick="cll()">확인</button>
+            <button id="ok">확인</button>
             <button onclick="modal.style.display = 'none'">취소</button>
           </div>
         </div>`
       )
     );
-    //
     this.delColBtn.addEventListener("change", delCol);
     this.splitColBtn.addEventListener("change", splitCol);
     this.delColDupBtn.addEventListener("change", delColDup);
-    //
-    //
   }
 
   getGui() {

@@ -13,17 +13,17 @@
     <div>
       <button id="upload-btn" style="cursor: pointer">파일 열기</button>
       <button id="dup-btn" style="cursor: pointer">중복행 제거</button>
-      <input id="save">
-
-      <button id="save-btn" style="cursor: pointer">다른 이름으로 저장</button>
+      <button id="merge-btn">컬럼 합치기</button>
       <input id="search" style="display: none">
       <button id="search-btn">검색</button>
       <button id="search-cancel-btn" style="display: none">취소</button>
       <div id="search-details" style="display: none">
-        <span>1/10</span>
         <button id="search-btn-add" style="cursor: pointer"><</button>
         <button id="search-btn-min" style="cursor: pointer">></button>
       </div>
+      <br>
+      <input id="save">
+      <button id="save-btn" style="cursor: pointer">다른 이름으로 저장</button>
       <div>
         <input id="change-old" />
         <span style="color: white">to</span>
@@ -43,8 +43,8 @@
         <input  id="calc-3">
         <button id="calc-btn">계산된 컬럼 추가</button>
         <button id="cancel-cal-btn" style="display: none">취소</button>
-        <button id="merge-btn">컬럼 합치기</button>
       </div>
+      <button onclick="gridOptions.api.exportDataAsCsv();">export</button>
     </div>
     <div style="display: flex; ">
       <div
@@ -57,7 +57,7 @@
       </div>
     </div>
     <!-- modal start -->
-    <div id="modal" style="display: none; position: absolute; top: 50%; left: 50%; background-color: white; border: 1px solid; width: 200px; height: 200px; transform: translate(-50%, -50%)">
+    <div id="modal" style="z-index: 6; display: none; position: absolute; top: 50%; left: 50%; background-color: white; border: 1px solid; width: 200px; height: 200px; transform: translate(-50%, -50%)">
       <input id="header-name" style="display: none"/>
 
     </div>
