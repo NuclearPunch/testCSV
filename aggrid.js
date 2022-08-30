@@ -1,28 +1,38 @@
 const { ipcRenderer } = require("electron");
 
+const getEle = (id) => document.getElementById(id);
 const savedData = {};
 let order = 0;
+let selectedRows = [];
+let eventHandler = [];
 
 ipcRenderer.on("open-dialog-paths-selected", (evt, args) => {
   const { columns, data } = args || {};
+  console.log(data);
   gridOptions.api.setRowData([...data]);
-  gridOptions.api.setColumnDefs([...columns]);
+  gridOptions.api.setColumnDefs([...getColDefs(columns)]);
+  gridOptions.api.addEventListener("virtualColumnsChanged", handleShiftClick);
+
+  const headers = document.querySelectorAll(".ag-header-cell");
+
+  headers.forEach((header) => {
+    header.addEventListener("click", handleClick);
+  });
 });
 
 ipcRenderer.on("on-handle-duplicate", (evt, rowData) => {
-  console.log(rowData);
   gridOptions.api.setRowData([...rowData]);
 });
 
 ipcRenderer.on("on-handle-save", (evt, name) => {
   const rowData = [];
-  const box = document.getElementById("info");
-  const child = document.createElement("div");
+  const box = getEle("info");
+  const child = getEle("div");
 
   gridOptions.api.forEachNode((node) => rowData.push(node.data));
   Object.assign(savedData, { [name]: rowData });
   Object.keys(savedData).forEach((key) => {
-    const div = document.createElement("div");
+    const div = getEle("div");
     const textNode = document.createTextNode(key);
     div.appendChild(textNode);
     div.onclick = function () {
@@ -34,16 +44,24 @@ ipcRenderer.on("on-handle-save", (evt, name) => {
 });
 
 ipcRenderer.on("on-handle-search", (evt, flag) => {
-  const searchText = document.getElementById("search").value;
+  const searchText = getEle("search").value;
   findString(searchText, flag);
 });
 
 ipcRenderer.on("on-handle-change-val", (evt, rowData) => {
   gridOptions.api.setRowData(rowData);
 });
-ipcRenderer.on("on-pivot", (evt, arg) => {
-  const [pivoted, org] = arg;
-  console.log(pivoted, org);
+ipcRenderer.on("on-handle-calc", (evt, args) => {
+  const [rowData, colName] = args;
+  const columns = gridOptions.api.getColumnDefs();
+  gridOptions.api.setRowData([...rowData]);
+  gridOptions.api.setColumnDefs([...columns, { field: colName }]);
+});
+ipcRenderer.on("on-handle-merge", (evt, args) => {
+  const [newRowData, newColNames] = args;
+  const columns = gridOptions.api.getColumnDefs();
+  gridOptions.api.setRowData([...newRowData]);
+  gridOptions.api.setColumnDefs([...columns, ...getColDefs([newColNames])]);
 });
 
 // util func
@@ -66,3 +84,98 @@ const paint = (search, order) => {
     ele[order].scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 };
+
+const handleShiftClick = () => {
+  const headers = document.querySelectorAll(".ag-header-cell");
+  headers.forEach((header) => {
+    header.addEventListener("click", handleClick);
+  });
+};
+
+const getColDefs = (columns) =>
+  columns.map((row) => ({
+    field: row,
+    valueGetter: (params) => {
+      return params?.data?.[row]
+        ? isNaN(params.data[row])
+          ? params.data[row]
+          : Number(params.data[row])
+        : params?.data?.[row];
+    },
+    filter: "agMultiColumnFilter",
+    enableRowGroup: true,
+    enablePivot: true,
+    defaultAggFunc: "sum",
+    enableValue: true,
+    filterParams: {
+      filters: [
+        {
+          filter: Filter,
+          // display: "subMenu",
+          title: "기타 필터",
+          display: "accordion",
+          filterParams: {
+            buttons: ["reset", "apply"],
+            debounceMs: 200,
+          },
+        },
+        {
+          filter: "agTextColumnFilter",
+          display: "accordion",
+          title: "조건 필터",
+          filterParams: {
+            filterOptions: ["contains", "blank", "notBlank"],
+            suppressAndOrCondition: true,
+            // buttons: ["reset", "apply"],
+            debounceMs: 200,
+          },
+        },
+        {
+          filter: "agNumberColumnFilter",
+          display: "accordion",
+          title: "값 필터",
+          filterParams: {
+            // filterOptions: ["contains", "blank", "notBlank"],
+            suppressAndOrCondition: true,
+            // buttons: ["reset", "apply"],
+            debounceMs: 200,
+          },
+        },
+        {
+          filter: "agDateColumnFilter",
+          display: "accordion",
+          title: "기간 필터",
+          filterParams: {
+            suppressAndOrCondition: true,
+            comparator: (filterLocalDateAtMidnight, cellValue) => {
+              const dateAsString = cellValue.split(" ")[0];
+              if (dateAsString == null) return -1;
+              const dateParts = dateAsString.split(".");
+              const cellDate = new Date(
+                Number(dateParts[0]),
+                Number(dateParts[1]) - 1,
+                Number(dateParts[2])
+              );
+
+              if (filterLocalDateAtMidnight.getTime() === cellDate.getTime()) {
+                return 0;
+              }
+
+              if (cellDate < filterLocalDateAtMidnight) {
+                return -1;
+              }
+
+              if (cellDate > filterLocalDateAtMidnight) {
+                return 1;
+              }
+            },
+          },
+        },
+        {
+          filter: "agSetColumnFilter",
+          display: "accordion",
+          title: "값으로 필터",
+        },
+      ],
+    },
+  }));
