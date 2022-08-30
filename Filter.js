@@ -52,9 +52,7 @@ class Filter {
                 <div>
                  <input id="del-col-dup" style="display: inline-block" type="checkbox">컬럼 중복 제거</input>
               </div>
-               <div>
-                <input id="filter-cond" style="display: inline-block" type="checkbox">조건으로 필터</input>
-              </div>
+         
                <div>
                 <input id="filter-val" style="display: inline-block" type="checkbox">값으로 필터</input>
               </div>
@@ -71,7 +69,7 @@ class Filter {
           },
         ],
       });
-      // 원본을 변화시켜야 함 ! //todo
+      //todo 원본을 sort 해야함 !
       params.filterChangedCallback();
     };
     const modalOpen = (callback, innerHTML) => {
@@ -134,6 +132,7 @@ class Filter {
       const rowData = getRowData();
       let maxDataLength = 0;
 
+      // todo 기존 컬럼 제거
       const newRowData = rowData.map((row) => {
         const spliter = ["_", ",", "-", "/", "^", "&", ".", ":"];
         const splitValues = splitVal([row[field]], spliter);

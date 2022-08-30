@@ -24,6 +24,64 @@ ipcRenderer.on("open-dialog-paths-selected", (evt, args) => {
           {
             filter: Filter,
             // display: "subMenu",
+            filterParams: {
+              buttons: ["reset", "apply"],
+              debounceMs: 200,
+            },
+          },
+          {
+            filter: "agTextColumnFilter",
+            display: "accordion",
+            title: "조건으로 필터",
+            filterParams: {
+              filterOptions: ["contains", "blank", "notBlank"],
+              suppressAndOrCondition: true,
+              // buttons: ["reset", "apply"],
+              debounceMs: 200,
+            },
+          },
+          {
+            filter: "agNumberColumnFilter",
+            display: "accordion",
+            title: "값으로 필터",
+            filterParams: {
+              // filterOptions: ["contains", "blank", "notBlank"],
+              suppressAndOrCondition: true,
+              // buttons: ["reset", "apply"],
+              debounceMs: 200,
+            },
+          },
+          {
+            filter: "agDateColumnFilter",
+            display: "accordion",
+            title: "기간으로 필터",
+            filterParams: {
+              suppressAndOrCondition: true,
+              comparator: (filterLocalDateAtMidnight, cellValue) => {
+                const dateAsString = cellValue.split(" ")[0];
+                if (dateAsString == null) return -1;
+                const dateParts = dateAsString.split(".");
+                const cellDate = new Date(
+                  Number(dateParts[0]),
+                  Number(dateParts[1]) - 1,
+                  Number(dateParts[2])
+                );
+
+                if (
+                  filterLocalDateAtMidnight.getTime() === cellDate.getTime()
+                ) {
+                  return 0;
+                }
+
+                if (cellDate < filterLocalDateAtMidnight) {
+                  return -1;
+                }
+
+                if (cellDate > filterLocalDateAtMidnight) {
+                  return 1;
+                }
+              },
+            },
           },
         ],
       },
