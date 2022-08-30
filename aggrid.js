@@ -8,7 +8,7 @@ let eventHandler = [];
 
 ipcRenderer.on("open-dialog-paths-selected", (evt, args) => {
   const { columns, data } = args || {};
-
+  console.log(data);
   gridOptions.api.setRowData([...data]);
   gridOptions.api.setColumnDefs([...getColDefs(columns)]);
   gridOptions.api.addEventListener("virtualColumnsChanged", handleShiftClick);
@@ -95,10 +95,16 @@ const handleShiftClick = () => {
 const getColDefs = (columns) =>
   columns.map((row) => ({
     field: row,
+    valueGetter: (params) => {
+      return params?.data?.[row]
+        ? isNaN(params.data[row])
+          ? params.data[row]
+          : Number(params.data[row])
+        : params?.data?.[row];
+    },
     filter: "agMultiColumnFilter",
     enableRowGroup: true,
     enablePivot: true,
-    pivot: true,
     defaultAggFunc: "sum",
     enableValue: true,
     filterParams: {
