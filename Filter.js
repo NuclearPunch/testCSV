@@ -71,6 +71,7 @@ class Filter {
           },
         ],
       });
+      // 원본을 변화시켜야 함 ! //todo
       params.filterChangedCallback();
     };
     const modalOpen = (callback, innerHTML) => {
@@ -83,12 +84,11 @@ class Filter {
       const modal = document.getElementById("modal");
       const col = gridOptions.columnApi.getColumn(params.colDef.field);
       const colName = document.getElementById("col-name");
-      const rowData = [];
+      const rowData = getRowData();
 
       col.colDef.field = colName.value;
       gridOptions.api.refreshHeader();
 
-      gridOptions.api.forEachNode((node) => rowData.push(node.data));
       gridOptions.api.setRowData([
         ...rowData.map((item) => {
           return {
@@ -105,9 +105,8 @@ class Filter {
       const modal = document.getElementById("modal");
       const oldVal = document.getElementById("old-val").value;
       const newVal = document.getElementById("new-val").value;
-      const rowData = [];
+      const rowData = getRowData();
 
-      gridOptions.api.forEachNode((node) => rowData.push(node.data));
       const result = rowData.map((row) =>
         row[params.colDef.field] === oldVal
           ? {
@@ -130,6 +129,51 @@ class Filter {
       });
       event.target.checked = false;
     };
+    const splitCol = () => {
+      const field = params.colDef.field;
+      const rowData = getRowData();
+      let maxDataLength = 0;
+
+      const newRowData = rowData.map((row) => {
+        const spliter = ["_", ",", "-", "/", "^", "&", ".", ":"];
+        const splitValues = splitVal([row[field]], spliter);
+        maxDataLength =
+          maxDataLength < splitValues.length
+            ? splitValues.length
+            : maxDataLength;
+        return {
+          ...row,
+          ...splitValues.reduce((acc, val, idx) => {
+            acc[`${field}_${idx}`] = val;
+            return acc;
+          }, {}),
+        };
+      });
+      gridOptions.api.setColumnDefs([
+        ...gridOptions.api.getColumnDefs(),
+        ...[...new Array(maxDataLength)].map((_, idx) => ({
+          field: `${field}_${idx}`,
+        })),
+      ]);
+      gridOptions.api.setRowData([...newRowData]);
+    };
+
+    function splitVal(value, splitUnits) {
+      const arr = value.map((item) => item.split(splitUnits[0])).flat();
+      splitUnits.shift();
+      if (splitUnits.length === 0) {
+        return arr;
+      }
+      return splitVal(arr, splitUnits);
+    }
+    const delColDup = () => {
+      const rowData = getRowData();
+      gridOptions.api.setRowData([...removeDup(rowData)]);
+    };
+    const filterCond = () => {};
+    const filterVal = () => {};
+
+    // utils
     function removeDup(rowData) {
       const newRowData = new Map();
       for (let row of rowData) {
@@ -137,15 +181,11 @@ class Filter {
       }
       return newRowData.values();
     }
-    const splitCol = () => {};
-    const delColDup = () => {
+    function getRowData() {
       const rowData = [];
       gridOptions.api.forEachNode((node) => rowData.push(node.data));
-      gridOptions.api.setRowData([...removeDup(rowData)]);
-    };
-    const filterCond = () => {};
-    const filterVal = () => {};
-
+      return rowData;
+    }
     // filter elements
     this.ascBtn = this.gui.querySelector("#sort-asc");
     this.descBtn = this.gui.querySelector("#sort-desc");
@@ -191,7 +231,7 @@ class Filter {
     );
     //
     this.delColBtn.addEventListener("change", delCol);
-    //
+    this.splitColBtn.addEventListener("change", splitCol);
     this.delColDupBtn.addEventListener("change", delColDup);
     //
     //
