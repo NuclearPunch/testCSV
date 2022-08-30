@@ -73,14 +73,53 @@ class Filter {
       });
       params.filterChangedCallback();
     };
-    const changeColName = (event) => {
+    const modalOpen = (callback, innerHTML) => {
+      const modal = document.getElementById("modal");
+      modal.style.display = "block";
+      modal.innerHTML = innerHTML;
+      document.getElementById("ok").onclick = callback;
+    };
+    const changeColName = () => {
+      const modal = document.getElementById("modal");
       const col = gridOptions.columnApi.getColumn(params.colDef.field);
-      col.colDef.headerName = ""; // todo
+      const colName = document.getElementById("col-name");
+      const rowData = [];
+
+      col.colDef.field = colName.value;
+      gridOptions.api.refreshHeader();
+
+      gridOptions.api.forEachNode((node) => rowData.push(node.data));
+      gridOptions.api.setRowData([
+        ...rowData.map((item) => {
+          return {
+            ...item,
+            [colName.value]: item[params.colDef.field],
+            stroke: params.colDef.field,
+          };
+        }),
+      ]);
+      gridOptions.api.setSideBar(gridOptions.api.getSideBar());
+      modal.style.display = "none";
     };
-    const changeColVal = (event) => {
-      const value = ""; //todo
+    const changeColVal = () => {
+      const modal = document.getElementById("modal");
+      const oldVal = document.getElementById("old-val").value;
+      const newVal = document.getElementById("new-val").value;
+      const rowData = [];
+
+      gridOptions.api.forEachNode((node) => rowData.push(node.data));
+      const result = rowData.map((row) =>
+        row[params.colDef.field] === oldVal
+          ? {
+              ...row,
+              [params.colDef.field]: newVal,
+            }
+          : { ...row }
+      );
+      gridOptions.api.setRowData([...result]);
+      modal.style.display = "none";
     };
-    const delCol = () => {
+    const delCol = (event) => {
       gridOptions.columnApi.applyColumnState({
         state: [
           {
@@ -89,7 +128,7 @@ class Filter {
           },
         ],
       });
-      // event.target.checked = false;
+      event.target.checked = false;
     };
     function removeDup(rowData) {
       const newRowData = new Map();
@@ -119,7 +158,37 @@ class Filter {
     // handlers
     this.ascBtn.addEventListener("change", (e) => sort(e, "asc"));
     this.descBtn.addEventListener("change", (e) => sort(e, "desc"));
-    //
+    this.changeColBtn.addEventListener("change", (e) =>
+      modalOpen(
+        changeColName,
+        `<div>
+          <div id="col-val-box">
+            <input id="col-name" />
+          </div>
+          <div style="position: absolute; bottom: 0; right: 0; padding: 4px;">
+            <button id="ok" onclick="cll()">확인</button>
+            <button onclick="modal.style.display = 'none'">취소</button>
+          </div>
+        </div>`
+      )
+    );
+    this.changeColValBtn.addEventListener("change", () =>
+      modalOpen(
+        changeColVal,
+        `<div>
+          <div id="col-val-box">
+            <label>찾기</label>
+            <input id="old-val" />
+            <label>바꾸기</label>
+            <input id="new-val" />
+          </div>
+          <div style="position: absolute; bottom: 0; right: 0; padding: 4px;">
+            <button id="ok" onclick="cll()">확인</button>
+            <button onclick="modal.style.display = 'none'">취소</button>
+          </div>
+        </div>`
+      )
+    );
     //
     this.delColBtn.addEventListener("change", delCol);
     //
