@@ -4,10 +4,7 @@ const fs = require("fs"); // Load the File System to execute our common tasks (C
 const dfd = require("danfojs-node");
 const Papa = require("papaparse");
 
-let allData = {};
-let allCols;
 const data2 = [];
-let dataFrame = [];
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1281,
@@ -123,21 +120,6 @@ app.whenReady().then(() => {
             event.sender.send("open-dialog-paths-selected", result);
           },
         });
-        // dfd
-        //   .readCSV(file) //assumes file is in CWD
-        //   .then((df) => {
-        //     allData = df;
-        //     allCols = df.$columns;
-        //     dataFrame = df.$data;
-        //     console.timeEnd("csv read");
-        //     event.sender.send("open-dialog-paths-selected", {
-        //       $columns: convertToColumn(df.$columns),
-        //       $data: convertToData(df.$data, convertToColumn(df.$columns)),
-        //     });
-        //   })
-        //   .catch((err) => {
-        //     console.log(err);
-        //   });
       })
       .catch((err) => {
         console.log(err);
@@ -146,8 +128,6 @@ app.whenReady().then(() => {
 
   ipcMain.on("handle-duplicate", (event, rowData) => {
     const rowDataNoDup = [...removeDup(rowData).values()];
-    // const dataFrame = new dfd.DataFrame(rowDataNoDup);
-    // dataFrame.$data.toJSON();
     event.sender.send("on-handle-duplicate", rowDataNoDup);
   });
   ipcMain.on("handle-save", (event, name) =>
@@ -158,10 +138,6 @@ app.whenReady().then(() => {
   );
   ipcMain.on("handle-change-val", (evt, payload) => {
     const [rowData, columns, oldVal, newVal] = payload;
-    // const result = allData.replace(oldVal, newVal);
-    // evt.sender.send("on-handle-change-val", [
-    //   ...convertToData(result.$data, convertToColumn(result.$columns)),
-    // ]);
     const resuklt = rowData.map((data) => {
       const old = Object.values(data).find((val) => val === oldVal);
       const key = Object.keys(data).find((item) => data[item] === oldVal);
@@ -210,24 +186,10 @@ function removeDup(rowData) {
 const convert = (results) => {
   const rowsArray = Object.keys(results[0]);
   return {
-    columns: rowsArray.map((row) => ({ field: row, sortable: true })),
+    columns: rowsArray,
     data: results,
   };
 };
-
-const convertToColumn = (cols) =>
-  cols.map((col) => ({ field: col, sortable: true }));
-
-const convertToData = (data, cols) => [
-  ...data.map((item) =>
-    cols.reduce((acc, col, idx) => {
-      acc[col.field] = item[idx];
-      return acc;
-    }, {})
-  ),
-];
-
-const convertToDataFrame = (rowData) => new dfd.DataFrame([...rowData]);
 
 const calculate = (sign, val1, val2) => {
   const [v1, v2] = [Number(val1), Number(val2)];

@@ -1,14 +1,34 @@
 const { ipcRenderer } = require("electron");
+
 const getEle = (id) => document.getElementById(id);
 const savedData = {};
 let order = 0;
 let selectedRows = [];
 let eventHandler = [];
+
 ipcRenderer.on("open-dialog-paths-selected", (evt, args) => {
   const { columns, data } = args || {};
 
   gridOptions.api.setRowData([...data]);
-  gridOptions.api.setColumnDefs([...columns]);
+  gridOptions.api.setColumnDefs([
+    ...columns.map((row) => ({
+      field: row,
+      filter: "agMultiColumnFilter",
+      enableRowGroup: true,
+      enablePivot: true,
+      pivot: true,
+      defaultAggFunc: "sum",
+      enableValue: true,
+      filterParams: {
+        filters: [
+          {
+            filter: Filter,
+            // display: "subMenu",
+          },
+        ],
+      },
+    })),
+  ]);
   gridOptions.api.addEventListener("virtualColumnsChanged", handleShiftClick);
 
   const headers = document.querySelectorAll(".ag-header-cell");

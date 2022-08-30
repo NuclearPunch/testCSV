@@ -56,8 +56,9 @@
       <div style="width: 200px;height: 580px; padding: 10px; background: white; margin: 30px 30px 30px 0" id="info">
       </div>
     </div>
+    <script src="Filter.js"></script>
     <script>
-      let gridOptions = {}
+      let gridOptions = { sideBar: 'columns', defaultColDef: {menuTabs: ['filterMenuTab']}, }
       const gridDiv = document.querySelector("#myGrid");
       new agGrid.Grid(gridDiv, gridOptions);
 
