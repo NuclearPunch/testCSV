@@ -923,10 +923,10 @@ cssstyle@^2.3.0:
   dependencies:
     cssom "~0.3.6"
 
-danfojs-node@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/danfojs-node/-/danfojs-node-1.1.1.tgz#47f12e84e63b32e4a207758d337d89a57d94f38c"
-  integrity sha512-soNlWpGugGK1BRDKVWkdV5j4vgtY3baMQT/slNjJRaLxnNOcOUu1thVQ65UeNrH7dvg6tLQimhGwlgTJld6muQ==
+danfojs-node@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/danfojs-node/-/danfojs-node-1.1.2.tgz#c61549ac3f691e4a934854f25d21e1a8ee4e2dcd"
+  integrity sha512-piIehMLN2Buk7i4PNlM95hoAnu0Nmt0vFebT2NcN25g7sfnJfbT2nWLJ732nIu0XL6rGhl+DDBBHwpymq0N7tw==
   dependencies:
     "@tensorflow/tfjs-node" "^3.13.0"
     mathjs "^9.4.4"
