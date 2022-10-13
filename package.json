@@ -63,6 +63,6 @@
   "dependencies": {
     "papaparse": "^5.3.2",
     "@tensorflow/tfjs-node": "^3.19.0",
-    "danfojs-node": "^1.1.1"
+    "danfojs-node": "^1.1.2"
   }
 }
